@@ -1,0 +1,14 @@
+test_videos
+
+.DS_Store
+__pycache__/
+venv/
+*.pyc
+.ipynb_checkpoints/
+
+output_videos
+
+logs
+temp_files
+
+.vs_code/
