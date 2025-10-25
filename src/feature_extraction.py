@@ -3,6 +3,7 @@ import torchvision.models as models
 import torchvision.transforms as T
 from PIL import Image
 import cv2
+from tqdm import tqdm
 
 class FeatureExtractor:
     """
@@ -33,22 +34,41 @@ class FeatureExtractor:
 
     def hook_fn(self, module, input, output):
         """A 'hook' to capture the output of the avgpool layer"""
-        self.features = output.squeeze()
+        # Squeeze the spatial dimensions, but keep the batch dimension
+        self.features = output.squeeze(-1).squeeze(-1)
 
-    def extract(self, frame_bgr):
+    def _preprocess_frame(self, frame_bgr):
         """
-        Extracts features from a single BGR frame (from OpenCV).
+        Helper function to pre-process a single BGR frame into a
+        transformed tensor.
         """
         # Convert from OpenCV's BGR to PIL's RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame_rgb)
         
-        # Apply transforms and add a batch dimension (B, C, H, W)
-        img_t = self.transform(img).unsqueeze(0).to(self.device)
+        # Apply transforms and return the tensor
+        return self.transform(img)
+
+    def extract_batch(self, frames):
+        """
+        Extracts features from a BATCH of BGR frames (from OpenCV).
+        This is *much* faster than one by one.
+        """
+        print("Pre-processing frames for batch...")
         
-        # Run the model. The hook will automatically store the features.
+        # Create a list of pre-processed frame tensors
+        # This part is still sequential, but it's very fast.
+        tensor_list = [self._preprocess_frame(f) for f in tqdm(frames, desc="Pre-processing")]
+        
+        # Stack all tensors into a single "batch" tensor (e.g., [300, 3, 224, 224])
+        batch_tensor = torch.stack(tensor_list).to(self.device)
+        
+        print(f"Running batch of {len(frames)} frames through the model (this is the fast part)...")
+        
+        # Run the model ONCE on the entire batch.
         with torch.no_grad():
-            self.model(img_t)
+            self.model(batch_tensor)
             
-        # Return features as a numpy array
+        # The hook will have saved the [300, 2048] tensor.
+        # Return it as a numpy array.
         return self.features.cpu().numpy()

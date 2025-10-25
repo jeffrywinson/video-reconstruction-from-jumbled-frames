@@ -1,7 +1,8 @@
 import os
 import sys
 import time
-from tqdm import tqdm
+# We no longer need tqdm here, it's moved to feature_extraction.py
+# from tqdm import tqdm 
 
 from src.video_processing import extract_frames, save_video
 from src.feature_extraction import FeatureExtractor
@@ -42,11 +43,16 @@ def run_reconstruction():
     extractor = FeatureExtractor()
     print(f"Feature extractor is using device: {extractor.device}")
     
-    print("Extracting features from all frames...")
-    features_list = []
-    # Using tqdm for a human-friendly progress bar
-    for frame in tqdm(frames, desc="Processing Frames"):
-        features_list.append(extractor.extract(frame))
+    print("Extracting features from all frames (in a single batch)...")
+    
+    # --- THIS IS THE MODIFIED PART ---
+    start_feature_time = time.time()
+    
+    # We now call our new batch function once.
+    features_list = extractor.extract_batch(frames)
+    
+    print(f"Batch feature extraction finished in {time.time() - start_feature_time:.2f}s.")
+    # --- END OF MODIFICATION ---
     
     print(f"Extracted {len(features_list)} feature vectors.")
 
