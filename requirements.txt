@@ -1,7 +1,4 @@
 numpy
-opencv-python-headless
 torch
 torchvision
-scikit-learn
-python-tsp
-tqdm
+onnxruntime

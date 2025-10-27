@@ -1,0 +1,105 @@
+method 2 (elkai)
+$ python main.py
+Loading and extracting frames from test_videos\jumbled_video.mp4...
+Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
+Initializing feature extractor (loading ResNet-50)...
+Feature extractor is using device: cpu
+Extracting features from all frames...
+Processing Frames: 100%|██████████████████████████████████████████████████████████████████████████████████| 300/300 [00:50<00:00,  5.99it/s] 
+Extracted 300 feature vectors.
+Building N x N distance matrix...
+Matrix built in 0.01s.
+Solving for the optimal path (TSP)...
+Running elkai (LKH-3) solver... (This will be *very* fast)
+Path solved in 13.00s.
+Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
+
+--- Reconstruction Complete! ---
+Output saved to: output_videos\reconstructed_jumbled_video.mp4
+Total processing time: 70.27 seconds.
+(venv) 
+
+method 3 - batch processing 300 frames at once instead of calling the model 300 separate times
+$ python main.py
+Loading and extracting frames from test_videos\jumbled_video.mp4...
+Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
+Initializing feature extractor (loading ResNet-50)...
+Feature extractor is using device: cpu
+Extracting features from all frames (in a single batch)...
+Pre-processing frames for batch...
+Pre-processing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 300/300 [00:04<00:00, 65.27it/s] 
+Running batch of 300 frames through the model (this is the fast part)...
+Batch feature extraction finished in 22.67s.
+Extracted 300 feature vectors.
+Building N x N distance matrix...
+Matrix built in 0.02s.
+Solving for the optimal path (TSP)...
+Running elkai (LKH-3) solver... (This will be *very* fast)
+Path solved in 14.45s.
+Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
+
+--- Reconstruction Complete! ---
+Output saved to: output_videos\reconstructed_jumbled_video.mp4
+Total processing time: 43.60 seconds.
+(venv)
+
+
+method 4 (using rust and docker)
+$ docker build -t frame-reconstructor .
+[+] Building 140.6s (25/25) FINISHED                                                                                    docker:desktop-linux
+ => [internal] load build definition from Dockerfile                                                                                    0.0s
+ => => transferring dockerfile: 2.27kB                                                                                                  0.0s 
+ => [internal] load metadata for docker.io/library/debian:bookworm-slim                                                                 2.0s 
+ => [internal] load metadata for docker.io/library/rust:1.80-bookworm                                                                   2.0s 
+ => [auth] library/rust:pull token for registry-1.docker.io                                                                             0.0s
+ => [auth] library/debian:pull token for registry-1.docker.io                                                                           0.0s
+ => [internal] load .dockerignore                                                                                                       0.0s
+ => => transferring context: 191B                                                                                                       0.0s 
+ => [builder 1/8] FROM docker.io/library/rust:1.80-bookworm@sha256:d22d8938f0403ee31c118b5bf2162b883313dd7f387f859d9f2accd7c884c385     0.0s 
+ => => resolve docker.io/library/rust:1.80-bookworm@sha256:d22d8938f0403ee31c118b5bf2162b883313dd7f387f859d9f2accd7c884c385             0.0s 
+ => [stage-1 1/9] FROM docker.io/library/debian:bookworm-slim@sha256:78d2f66e0fec9e5a39fb2c72ea5e052b548df75602b5215ed01a17171529f706   0.0s 
+ => => resolve docker.io/library/debian:bookworm-slim@sha256:78d2f66e0fec9e5a39fb2c72ea5e052b548df75602b5215ed01a17171529f706           0.0s 
+ => [internal] load build context                                                                                                       0.0s 
+ => => transferring context: 6.25kB                                                                                                     0.0s 
+ => CACHED [builder 2/8] RUN apt-get update && apt-get install -y --no-install-recommends     cmake clang libclang-dev pkg-config libs  0.0s
+ => CACHED [builder 3/8] RUN rustup update nightly && rustup default nightly                                                            0.0s 
+ => CACHED [builder 4/8] RUN curl -sSL -o /tmp/onnxruntime.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnx  0.0s
+ => CACHED [builder 5/8] WORKDIR /app                                                                                                   0.0s 
+ => CACHED [builder 6/8] COPY Cargo.toml ./                                                                                             0.0s 
+ => [builder 7/8] COPY src ./src                                                                                                        0.0s 
+ => [builder 8/8] RUN cargo clean && cargo build --release                                                                            133.5s 
+ => CACHED [stage-1 2/9] RUN apt-get update && apt-get install -y --no-install-recommends     libopencv-core406 libopencv-imgproc406 l  0.0s 
+ => CACHED [stage-1 3/9] WORKDIR /app                                                                                                   0.0s 
+ => [stage-1 4/9] COPY --from=builder /app/target/release/video-reconstruction-from-jumbled-frames .                                    0.0s 
+ => [stage-1 5/9] COPY --from=builder /opt/onnxruntime/lib /usr/local/lib                                                               0.1s 
+ => [stage-1 6/9] RUN ldconfig                                                                                                          0.2s 
+ => [stage-1 7/9] COPY resnet50.onnx .                                                                                                  0.1s 
+ => [stage-1 8/9] COPY resnet50.onnx.data .                                                                                             0.2s 
+ => [stage-1 9/9] RUN mkdir -p /app/test_videos /app/output_videos                                                                      0.3s 
+ => exporting to image                                                                                                                  3.8s 
+ => => exporting layers                                                                                                                 2.9s 
+ => => exporting manifest sha256:96d67916a2cca3c2197379cdf99349a8cd1dc516f004b951d47cc048d5e72951                                       0.0s 
+ => => exporting config sha256:83f496c485f52f3f347053ae8d56216ba721cc7e738dc08e60cbdc4839fb3eca                                         0.0s 
+ => => exporting attestation manifest sha256:0debd641ec3b662d34a57567020b65f93286087ce0067e874bd70dffb209f504                           0.0s 
+ => => exporting manifest list sha256:4e4df611b157cec41a14dec54829bfa614652d643fbc259d3f8da48b9d075789                                  0.0s 
+ => => naming to docker.io/library/frame-reconstructor:latest                                                                           0.0s 
+ => => unpacking to docker.io/library/frame-reconstructor:latest                                                                        0.8s 
+(venv)
+$ docker run --rm -v "//$(pwd)/test_videos":/app/test_videos -v "//$(pwd)/output_videos":/app/output_videos frame-reconstructor
+Loading and extracting frames from /app/test_videos/jumbled_video.mp4...
+Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
+Initializing feature extractor (loading ResNet-50)...
+Extracting features from all frames (sequentially)...
+Pre-processing 300 frames...
+Matrix built in 0.06s.
+Solving for the optimal path (Native LKH-3)...
+Heuristic: Start/End candidates (most dissimilar): Frame 49 and Frame 111
+Path starts with 0 and ends with 96.
+Heuristic suggests reversal (Start: 49, End: 111). Reversing final path.
+Path solved in 0.55s.
+Saving reconstructed video to /app/output_videos/reconstructed_jumbled_video.mp4...
+
+--- Reconstruction Complete! ---
+Output saved to: /app/output_videos/reconstructed_jumbled_video.mp4
+Total processing time: 26.52 seconds.
+(venv)

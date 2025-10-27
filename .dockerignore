@@ -1,0 +1,5 @@
+# Ignore the Rust build target directory (speeds up COPY)
+target/
+
+# Ignore the local lock file to force regeneration inside container
+Cargo.lock

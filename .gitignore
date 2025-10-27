@@ -1,14 +1,31 @@
-test_videos
+# Ignore Rust build artifacts
+/target/
 
+# Ignore Cargo lock file (optional, but often recommended for libraries/apps)
+# Keep it if you want to lock dependencies exactly for collaborators
+# Cargo.lock
+
+# Ignore local environment files (if any)
+.env
+
+# Ignore IDE/editor specific files
+.vscode/
+.idea/
+
+# Ignore OS specific files
 .DS_Store
-__pycache__/
+Thumbs.db
+
+# Ignore secrets or large data files not meant for Git
+# *.secret
+# *.bigdata
+
+# Ignore video files (inputs/outputs should not be in Git)
+/test_videos/*
+!/test_videos/.gitkeep # Keep the folder structure, but not its contents
+/output_videos/*
+!/output_videos/.gitkeep # Keep the folder structure, but not its contents
+*.mp4
+
 venv/
-*.pyc
-.ipynb_checkpoints/
-
-output_videos
-
-logs
-temp_files
-
-.vs_code/
+__pycache__/
