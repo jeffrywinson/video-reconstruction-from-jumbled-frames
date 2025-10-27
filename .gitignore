@@ -20,12 +20,22 @@ Thumbs.db
 # *.secret
 # *.bigdata
 
-# Ignore video files (inputs/outputs should not be in Git)
-/test_videos/*
-!/test_videos/.gitkeep # Keep the folder structure, but not its contents
-/output_videos/*
-!/output_videos/.gitkeep # Keep the folder structure, but not its contents
+# Ignore all video files
 *.mp4
+
+# --- test_videos folder ---
+# Ignore everything inside test_videos/
+test_videos/*
+# But keep the directory itself and .gitkeep
+!test_videos/
+!test_videos/.gitkeep
+
+# --- output_videos folder ---
+# Ignore everything inside output_videos/
+output_videos/*
+# But keep the directory itself and .gitkeep
+!output_videos/
+!output_videos/.gitkeep
 
 venv/
 __pycache__/

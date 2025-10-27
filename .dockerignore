@@ -3,3 +3,9 @@ target/
 
 # Ignore the local lock file to force regeneration inside container
 Cargo.lock
+
+# Ignore local environment files
+venv/
+
+#ignore Python cache files
+__pycache__/
