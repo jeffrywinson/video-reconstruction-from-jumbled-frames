@@ -2,3 +2,4 @@ numpy
 torch
 torchvision
 onnxruntime
+scikit-image
