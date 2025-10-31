@@ -20,8 +20,9 @@ The entire application, including all complex C++/OpenCV/ONNX dependencies, has 
 **Prerequisite:**
 * **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** installed and running.
     * *No Rust, Python, C++, CMake, or OpenCV installation is required on your machine.*
+* Also make sure you have Git on your system (https://git-scm.com/install/)
 
-**Steps:**
+**Steps (all commands for Git Bash terminal):**
 
 1.  **Clone the Repository (Optional but Recommended):**
     This gives you the necessary `test_videos` and `output_videos` folder structure.
@@ -51,18 +52,6 @@ The entire application, including all complex C++/OpenCV/ONNX dependencies, has 
       ghcr.io/jeffrywinson/video-reconstruction-from-jumbled-frames:latest
     ```
     *(Note: The `//$(pwd)/...` syntax is recommended for Git Bash/MINGW64 on Windows. Use appropriate volume mounting syntax for your shell if different, e.g., `${PWD}` for PowerShell or just `./` for Linux/macOS)*
-
-    Powershell
-    ```powershell
-    # Make sure Docker Desktop is running!
-    docker run --rm -v "${PWD}\test_videos:/app/test_videos" -v "${PWD}\output_videos:/app/output_videos" ghcr.io/jeffrywinson/video-reconstruction-from-jumbled-frames:latest
-    ```
-
-    macOS/Linus (bash/zsh/sh)
-    ```bash
-    # Make sure Docker Desktop is running!
-    docker run --rm -v "$(pwd)/test_videos:/app/test_videos" -v "$(pwd)/output_videos:/app/output_videos" ghcr.io/jeffrywinson/video-reconstruction-from-jumbled-frames:latest
-    ```
 
 5.  **Check Output:**
     The reconstructed video (`reconstructed_jumbled_video.mp4`) will appear in your local `output_videos` folder.
