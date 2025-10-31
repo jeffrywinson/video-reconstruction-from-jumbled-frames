@@ -4,10 +4,14 @@ target/
 # Ignore the local lock file to force regeneration inside container
 Cargo.lock
 
-# Ignore local environment files
+# local environment files
 venv/
 
-#ignore Python cache files
+# Python cache files
 __pycache__/
 
+# python scripts for model exporting and verifying     
 utils/
+
+# logs
+logs/

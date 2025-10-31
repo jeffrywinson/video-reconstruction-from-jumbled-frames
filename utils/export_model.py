@@ -1,8 +1,7 @@
-# export_model.py (Updated)
 import torch
 import torch.nn as nn
 import torchvision.models as models
-import onnxscript # Ensure this is installed: pip install onnxscript
+import onnxscript 
 
 print("Loading pre-trained ResNet-50...")
 
@@ -12,7 +11,6 @@ class ResNet50Features(nn.Module):
         base = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
         # Include layers up to and including avgpool (output shape: [batch, 2048, 1, 1])
         self.features = nn.Sequential(*list(base.children())[:-1])
-        # REMOVED: self.flatten = nn.Flatten(1)
 
     def forward(self, x):
         x = self.features(x)

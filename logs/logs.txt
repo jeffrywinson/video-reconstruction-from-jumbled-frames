@@ -1,50 +1,4 @@
-method 2 (elkai)
-$ python main.py
-Loading and extracting frames from test_videos\jumbled_video.mp4...
-Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
-Initializing feature extractor (loading ResNet-50)...
-Feature extractor is using device: cpu
-Extracting features from all frames...
-Processing Frames: 100%|██████████████████████████████████████████████████████████████████████████████████| 300/300 [00:50<00:00,  5.99it/s] 
-Extracted 300 feature vectors.
-Building N x N distance matrix...
-Matrix built in 0.01s.
-Solving for the optimal path (TSP)...
-Running elkai (LKH-3) solver... (This will be *very* fast)
-Path solved in 13.00s.
-Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
-
---- Reconstruction Complete! ---
-Output saved to: output_videos\reconstructed_jumbled_video.mp4
-Total processing time: 70.27 seconds.
-(venv) 
-
-method 3 - batch processing 300 frames at once instead of calling the model 300 separate times
-$ python main.py
-Loading and extracting frames from test_videos\jumbled_video.mp4...
-Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
-Initializing feature extractor (loading ResNet-50)...
-Feature extractor is using device: cpu
-Extracting features from all frames (in a single batch)...
-Pre-processing frames for batch...
-Pre-processing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 300/300 [00:04<00:00, 65.27it/s] 
-Running batch of 300 frames through the model (this is the fast part)...
-Batch feature extraction finished in 22.67s.
-Extracted 300 feature vectors.
-Building N x N distance matrix...
-Matrix built in 0.02s.
-Solving for the optimal path (TSP)...
-Running elkai (LKH-3) solver... (This will be *very* fast)
-Path solved in 14.45s.
-Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
-
---- Reconstruction Complete! ---
-Output saved to: output_videos\reconstructed_jumbled_video.mp4
-Total processing time: 43.60 seconds.
-(venv)
-
-
-method 4 (using rust and docker)
+METHOD 4 [Rust + Docker] (final method) - least time (~25 seconds)
 $ docker build -t frame-reconstructor .
 [+] Building 140.6s (25/25) FINISHED                                                                                    docker:desktop-linux
  => [internal] load build definition from Dockerfile                                                                                    0.0s
@@ -102,4 +56,55 @@ Saving reconstructed video to /app/output_videos/reconstructed_jumbled_video.mp4
 --- Reconstruction Complete! ---
 Output saved to: /app/output_videos/reconstructed_jumbled_video.mp4
 Total processing time: 26.52 seconds.
+(venv)
+
+
+
+PREVIOUS TRIALS:
+
+METHOD 1 [Python]: no valid output even after 15 minutes, solving TSP without elkai consumed a lot of time
+
+METHOD 2 [Python]: introduced elkai tsp solver, got output in around 70 seconds.
+$ python main.py
+Loading and extracting frames from test_videos\jumbled_video.mp4...
+Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
+Initializing feature extractor (loading ResNet-50)...
+Feature extractor is using device: cpu
+Extracting features from all frames...
+Processing Frames: 100%|██████████████████████████████████████████████████████████████████████████████████| 300/300 [00:50<00:00,  5.99it/s] 
+Extracted 300 feature vectors.
+Building N x N distance matrix...
+Matrix built in 0.01s.
+Solving for the optimal path (TSP)...
+Running elkai (LKH-3) solver... (This will be *very* fast)
+Path solved in 13.00s.
+Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
+
+--- Reconstruction Complete! ---
+Output saved to: output_videos\reconstructed_jumbled_video.mp4
+Total processing time: 70.27 seconds.
+(venv) 
+
+METHOD 3 [Python] - batch processing 300 frames at once instead of calling the model 300 separate times
+$ python main.py
+Loading and extracting frames from test_videos\jumbled_video.mp4...
+Successfully extracted 300 frames (1920x1080 @ 30.00 FPS).
+Initializing feature extractor (loading ResNet-50)...
+Feature extractor is using device: cpu
+Extracting features from all frames (in a single batch)...
+Pre-processing frames for batch...
+Pre-processing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 300/300 [00:04<00:00, 65.27it/s] 
+Running batch of 300 frames through the model (this is the fast part)...
+Batch feature extraction finished in 22.67s.
+Extracted 300 feature vectors.
+Building N x N distance matrix...
+Matrix built in 0.02s.
+Solving for the optimal path (TSP)...
+Running elkai (LKH-3) solver... (This will be *very* fast)
+Path solved in 14.45s.
+Saving reconstructed video to output_videos\reconstructed_jumbled_video.mp4...
+
+--- Reconstruction Complete! ---
+Output saved to: output_videos\reconstructed_jumbled_video.mp4
+Total processing time: 43.60 seconds.
 (venv)

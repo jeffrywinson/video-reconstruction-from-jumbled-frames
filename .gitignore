@@ -1,24 +1,13 @@
-# Ignore Rust build artifacts
+# Rust build artifacts
 /target/
 
-# Ignore Cargo lock file (optional, but often recommended for libraries/apps)
-# Keep it if you want to lock dependencies exactly for collaborators
-# Cargo.lock
-
-# Ignore local environment files (if any)
-.env
-
-# Ignore IDE/editor specific files
+# IDE/editor specific files
 .vscode/
 .idea/
 
-# Ignore OS specific files
+# OS specific files
 .DS_Store
 Thumbs.db
-
-# Ignore secrets or large data files not meant for Git
-# *.secret
-# *.bigdata
 
 # Ignore all video files
 *.mp4
@@ -37,5 +26,6 @@ output_videos/*
 !output_videos/
 !output_videos/.gitkeep
 
+# python env files
 venv/
 __pycache__/

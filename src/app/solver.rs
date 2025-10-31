@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use ndarray::{s, Array2, ArrayView1, ArrayView2}; // <-- Added 's' for slicing
 use elkai_rs::DistanceMatrix;
 
-// Helper function (unchanged)
+// Helper function
 fn cosine_distance(a: ArrayView1<f32>, b: ArrayView1<f32>) -> f32 {
     let dot = a.dot(&b);
     let norm_a = a.dot(&a).sqrt();
@@ -12,7 +12,7 @@ fn cosine_distance(a: ArrayView1<f32>, b: ArrayView1<f32>) -> f32 {
     1.0 - similarity
 }
 
-// Build matrix function (unchanged)
+// Build matrix function
 pub fn build_distance_matrix(features: ArrayView2<f32>) -> Result<Array2<f32>> {
     let n = features.shape()[0];
     let mut dist_matrix = Array2::zeros((n, n));
@@ -29,7 +29,7 @@ pub fn build_distance_matrix(features: ArrayView2<f32>) -> Result<Array2<f32>> {
     Ok(dist_matrix)
 }
 
-// --- Heavily revised solve_tsp function ---
+// TSP Solver function
 pub fn solve_tsp(dist_matrix: &Array2<f32>) -> Result<Vec<usize>> {
     let n = dist_matrix.shape()[0];
     if n < 2 {

@@ -23,7 +23,6 @@ RUN curl -sSL -o /tmp/onnxruntime.tgz ${ORT_RELEASE_URL} \
 
 WORKDIR /app
 
-# --- FIX: Split COPY and add cargo clean ---
 # Copy ONLY Cargo.toml first - allows Docker to cache dependency downloads/builds
 COPY Cargo.toml ./
 # Copy source code AFTER manifests
@@ -36,8 +35,6 @@ ENV OPENCV_BUILD_CONTRIB=1
 
 # Clean potential old artifacts AND build using the nightly toolchain
 RUN cargo clean && cargo build --release
-# --- END FIX ---
-
 
 # --- Stage 2: The "Final App" ---
 FROM debian:bookworm-slim
@@ -54,7 +51,7 @@ COPY --from=builder /app/target/release/video-reconstruction-from-jumbled-frames
 COPY --from=builder /opt/onnxruntime/lib /usr/local/lib
 RUN ldconfig
 COPY resnet50.onnx .
-# --- FIX: Copy the .data file too ---
+
 COPY resnet50.onnx.data .
 RUN mkdir -p /app/test_videos /app/output_videos
 ENV ORT_DYLIB_PATH=/usr/local/lib/libonnxruntime.so.${ORT_VERSION}
