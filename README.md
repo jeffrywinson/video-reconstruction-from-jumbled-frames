@@ -54,7 +54,10 @@ The entire application, including all complex C++/OpenCV/ONNX dependencies, has 
     *(Note: The `//$(pwd)/...` syntax is recommended for Git Bash/MINGW64 on Windows. Use appropriate volume mounting syntax for your shell if different, e.g., `${PWD}` for PowerShell or just `./` for Linux/macOS)*
 
 5.  **Check Output:**
-    The reconstructed video (`reconstructed_jumbled_video.mp4`) will appear in your local `output_videos` folder.
+    The reconstructed video (`reconstructed_jumbled_video.mp4`) will appear in your local `output_videos` folder.</br>
+    Example reconstructed video: https://drive.google.com/file/d/1EATkfirgn7uPqAeyGlCwBZr99Pi_TLdG/view?usp=sharing
+
+    ### Refer to logs.txt file inside the logs folder to see how fast my execution was (I tested this code on an i7-1250U, and it took around ~25 seconds). 
 
 ---
 
@@ -66,7 +69,7 @@ My high-level strategy is to **transform a visual sequencing problem into a data
 
 ## ⚙️ Core Dependencies & Rationale
 
-The selection of our core libraries was critical for achieving a balance of high performance, correctness, and deployment simplicity.
+The selection of my core libraries was critical for achieving a balance of high performance, correctness, and deployment simplicity.
 
 * **`opencv`**: Used for all video I/O (reading/writing frames).
     * **Why?** It is the battle-tested, industry-standard C++ library for computer vision, and its Rust bindings are robust. It provides the most efficient way to demux video files into raw frames and re-assemble them.
