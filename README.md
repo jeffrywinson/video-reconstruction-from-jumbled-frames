@@ -169,7 +169,7 @@ This section explains *why* these specific architectural and algorithmic choices
 ### Why LKH-3 (TSP) over a Greedy Algorithm?
 
 * **Alternative:** A simple "nearest-neighbor" greedy algorithm: Start at frame 0. Find the *closest* unvisited frame. Jump to it. From there, find the *next* closest unvisited frame, and so on.
-* **Problem:** This is fast ($O(N^2)$) but highly prone to errors. It makes locally optimal choices that lead to a globally terrible solution. One "wrong jump" early on can trap the algorithm in a completely incorrect path with no way to backtrack.
+* **Problem:** This is fast $(O(N^2))$ but highly prone to errors. It makes locally optimal choices that lead to a globally terrible solution. One "wrong jump" early on can trap the algorithm in a completely incorrect path with no way to backtrack.
 * **Our Choice:** A **global optimization heuristic (LKH-3)** considers the *total cost of the entire path*. It is free to make a "locally bad" jump (e.g., skipping a close frame) if that jump enables a much better path overall. This global perspective is essential for achieving high accuracy and is why we accept the (still very fast) cost of a full TSP solve.
 
 ---
@@ -179,7 +179,7 @@ This section explains *why* these specific architectural and algorithmic choices
 While this architecture is robust and performant, several areas could be parallelized to further improve speed.
 
 * **Parallel Preprocessing:** The `extract_batch` function currently preprocesses all 300 frames sequentially on the main thread. This entire mapping operation (BGR->RGB, resize, normalize) is "embarrassingly parallel." This could be easily parallelized using the **`rayon`** crate, converting `frames.iter().map(...)` to `frames.par_iter().map(...)` to leverage all available CPU cores.
-* **Parallel Distance Matrix:** The `build_distance_matrix` function uses two nested loops ($O(N^2)$). The outer loop (`for i in 0..n`) is also "embarrassingly parallel." `rayon` could be used to compute multiple rows of the distance matrix in parallel, as each row `i` is independent of all other rows.
+* **Parallel Distance Matrix:** The `build_distance_matrix` function uses two nested loops $(O(N^2))$. The outer loop (`for i in 0..n`) is also "embarrassingly parallel." `rayon` could be used to compute multiple rows of the distance matrix in parallel, as each row `i` is independent of all other rows.
 * **Hardware-Specific Runtimes:** The `ort` crate can be configured to use hardware-specific **Execution Providers** (e.g., NVIDIA's TensorRT or Apple's CoreML). Compiling the application with these providers enabled could grant further, "free" performance boosts on compatible hardware by using highly optimized device-specific kernels.
 
 ---
