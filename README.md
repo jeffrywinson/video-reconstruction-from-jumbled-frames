@@ -33,9 +33,10 @@ The entire application, including all complex C++/OpenCV/ONNX dependencies, has 
     ```
 
 2.  **Prepare Input:**
-    Place your jumbled video file (e.g., `jumbled_video.mp4`) inside the `test_videos` directory.
+    Place your jumbled video file (e.g., `jumbled_video.mp4`) inside the `test_videos` directory.</br>
+    Example jumbled video: https://drive.google.com/file/d/1D-aJqCPhByCc1XjMAuBZBuVIrzPKSoiO/view?usp=sharing
 
-3.  **Run the Docker Container:**
+4.  **Run the Docker Container:**
     Open your terminal in the project's root directory (`video-reconstruction-from-jumbled-frames`) and execute the command below.
     * This command automatically **downloads** the pre-built Docker image (~1-2 GB download the first time).
     * It then **instantly runs** the compiled Rust program (< 25 seconds runtime expected on the benchmark i7).
@@ -63,18 +64,16 @@ The entire application, including all complex C++/OpenCV/ONNX dependencies, has 
     docker run --rm -v "$(pwd)/test_videos:/app/test_videos" -v "$(pwd)/output_videos:/app/output_videos" ghcr.io/jeffrywinson/video-reconstruction-from-jumbled-frames:latest
     ```
 
-4.  **Check Output:**
+5.  **Check Output:**
     The reconstructed video (`reconstructed_jumbled_video.mp4`) will appear in your local `output_videos` folder.
 
 ---
 
 # 🧩 Algorithm Methodology & Design Rationale
 
-This document details the algorithmic approach and technical design choices for the "Jumbled Frame Reconstruction" project. The core problem is to re-sequence 300 shuffled video frames into their correct temporal order.
+The core problem is to re-sequence 300 shuffled video frames into their correct temporal order.
 
-Our high-level strategy is to **transform a visual sequencing problem into a data-driven graph problem.** We treat each frame as a "node" in a graph and use a machine learning model to determine the "distance" (or dissimilarity) between every pair of nodes. The problem is then reduced to finding the single shortest path that visits every node exactly once—a classic computer science problem known as the **Traveling Salesperson Problem (TSP)**.
-
----
+My high-level strategy is to **transform a visual sequencing problem into a data-driven graph problem.** We treat each frame as a "node" in a graph and use a machine learning model to determine the "distance" (or dissimilarity) between every pair of nodes. The problem is then reduced to finding the single shortest path that visits every node exactly once—a classic computer science problem known as the **Traveling Salesperson Problem (TSP)**.
 
 ## ⚙️ Core Dependencies & Rationale
 
@@ -93,8 +92,6 @@ The selection of our core libraries was critical for achieving a balance of high
     * **Why?** LKH-3 is widely considered the *state-of-the-art heuristic solver* for the symmetric TSP. For a 300-node problem, it provides a near-perfect (and often truly optimal) solution in milliseconds. It is vastly superior to simpler, less accurate heuristics.
 * **`anyhow`**: Used for simple and clean error handling.
     * **Why?** It simplifies the error-handling boilerplate, allowing us to use `?` on functions that return different error types, which is common when interfacing with C++ libraries (like OpenCV and ORT).
-
----
 
 ## 🔬 Step-by-Step Algorithmic Pipeline
 
@@ -136,8 +133,6 @@ This is the most complex algorithmic step. We need to find the shortest *path*, 
 
 The `save_video` function creates a new OpenCV `VideoWriter`. It then iterates through the `solved_order` `Vec<usize>` and, for each index, writes the corresponding frame from the in-memory `Vec<Mat>` to the new video file, using the original FPS and resolution.
 
----
-
 ## 🤔 Design Rationale (The "Why")
 
 This section explains *why* these specific architectural and algorithmic choices were made over simpler alternatives.
@@ -171,6 +166,41 @@ This section explains *why* these specific architectural and algorithmic choices
 * **Alternative:** A simple "nearest-neighbor" greedy algorithm: Start at frame 0. Find the *closest* unvisited frame. Jump to it. From there, find the *next* closest unvisited frame, and so on.
 * **Problem:** This is fast $(O(N^2))$ but highly prone to errors. It makes locally optimal choices that lead to a globally terrible solution. One "wrong jump" early on can trap the algorithm in a completely incorrect path with no way to backtrack.
 * **Our Choice:** A **global optimization heuristic (LKH-3)** considers the *total cost of the entire path*. It is free to make a "locally bad" jump (e.g., skipping a close frame) if that jump enables a much better path overall. This global perspective is essential for achieving high accuracy and is why we accept the (still very fast) cost of a full TSP solve.
+
+## 🦀 Why Rust over Python?
+
+While Python is excellent for rapid prototyping, Rust was chosen for this project due to several critical advantages, particularly for a high-performance, complex task like this.
+
+* **Raw Performance:** The most CPU-intensive parts of this project are the image preprocessing and the $O(N^2)$ distance matrix calculation. Python, being an interpreted language, is significantly slower at these "hot loops." Rust compiles to a native, highly-optimized binary (like C++) that executes these tasks at maximum speed, minimizing the bottleneck.
+* **Safe Concurrency:** The "Future Scope" plan involves parallelizing the preprocessing and matrix calculations. In Rust, this is trivially and *safely* achieved with the `rayon` crate. Rust's ownership model guarantees at *compile-time* that there are no data races, a very common and difficult bug when parallelizing code in other languages.
+* **Simplified Deployment:** As seen in the `Dockerfile`, the final Rust application is a **single, self-contained binary**. This is incredibly simple to deploy. A Python application would require installing the Python interpreter, managing a `virtualenv`, and installing a list of dependencies, leading to a larger and more complex final container image.
+
+## 🐳 How does Docker work here ?
+
+This project has a complex build environment, requiring a specific Rust toolchain, C++ compilers, system-level libraries like OpenCV, and specific pre-compiled binaries for the ONNX Runtime. Managing this setup manually is difficult and error-prone.
+
+Docker solves this by **encapsulating the entire build and runtime environment** into a single, reproducible "recipe" called a `Dockerfile`. This guarantees that the application builds and runs *identically* everywhere, from a developer's laptop to a competition server, solving the "it works on my machine" problem.
+
+### The Multi-Stage Build Strategy
+
+This `Dockerfile` uses a **multi-stage build**, which is a crucial best practice. It separates the *build environment* (which is large and full of compilers and developer tools) from the *final runtime environment* (which is small, clean, and secure).
+
+#### Stage 1: The "Builder"
+* **Base (`FROM rust:1.80-bookworm AS builder`):** Starts with a large official Rust image that includes the compiler and Debian "bookworm" package manager.
+* **Install Build Tools:** Installs all *build-time* dependencies. This includes C++ tools like `cmake` and `clang`, and the *development headers* for OpenCV (`libopencv-dev`) and video codecs (`libavcodec-dev`).
+* **Toolchain & SDKs:** Switches the Rust toolchain to `nightly` and manually downloads the specific `onnxruntime` v1.22.0 pre-compiled library.
+* **Cache Dependencies:** Copies `Cargo.toml` first. This is a Docker optimization: if only the `src` code changes (and not the dependencies), Docker can re-use the cached dependency layer, making builds much faster.
+* **Compile:** Sets environment variables (`ENV`) to tell the `ort` and `opencv` crates where to find their libraries, then builds the fully optimized Rust binary (`cargo build --release`).
+
+#### Stage 2: The "Final App"
+* **Base (`FROM debian:bookworm-slim`):** Starts from a *new*, *minimal* base image. This image does **not** contain Rust, `cmake`, or any of the large development tools from Stage 1.
+* **Install Runtime Libs:** Installs *only* the essential *runtime* shared libraries (`.so` files) that the compiled binary needs to run. This includes `libopencv-core406`, `libavcodec59`, etc., but *not* the `-dev` packages.
+* **Copy Artifacts:** This is the key to multi-stage builds.
+    1.  `COPY --from=builder ... video-reconstruction...`: Copies *only* the compiled Rust executable from the `builder` stage.
+    2.  `COPY --from=builder ... /usr/local/lib`: Copies the `onnxruntime` `.so` files from the `builder` stage.
+* **Final Setup:** Copies the `resnet50.onnx` model, creates the necessary I/O directories, and sets the `CMD` to run the executable when the container starts.
+
+The result is a **small, secure, and efficient final image** that contains only the compiled program and its immediate dependencies, making it easy to deploy and run anywhere.
 
 ---
 
